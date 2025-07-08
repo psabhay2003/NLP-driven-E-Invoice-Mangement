@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+uploads/
+*.zip
+*.csv
+.env
+t5_invoice_model/
+*.safetensors
