@@ -85,5 +85,9 @@ def append_to_existing_csv():
     flash("✅ Appended to invoices.csv successfully!")
     return send_file(existing_csv_path, as_attachment=True)
 
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
