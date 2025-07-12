@@ -1,4 +1,28 @@
+import os
+import requests
 from transformers import T5Tokenizer, T5ForConditionalGeneration
+
+def download_model():
+    model_dir = "t5_invoice_model"
+    model_file = os.path.join(model_dir, "model.safetensors")
+
+    if not os.path.exists(model_file):
+        os.makedirs(model_dir, exist_ok=True)
+        print("Downloading model...")
+        url = "https://your-direct-link.com/model.safetensors"  # ← Replace this
+        response = requests.get(url)
+        with open(model_file, "wb") as f:
+            f.write(response.content)
+
+        # Do the same for other required files (config.json, tokenizer_config.json, etc.)
+        # You can repeat for each file
+        # Or zip them all and unzip here
+download_model()
+
+# Load model and tokenizer
+tokenizer = T5Tokenizer.from_pretrained("t5_invoice_model")
+model = T5ForConditionalGeneration.from_pretrained("t5_invoice_model")
+
 
 # Load model and tokenizer once
 tokenizer = T5Tokenizer.from_pretrained("./t5_invoice_model")  # Adjust path
