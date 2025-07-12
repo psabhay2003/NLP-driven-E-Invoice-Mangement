@@ -2,8 +2,11 @@ services:
   - type: web
     name: invoice-ocr-app
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      apt-get update
+      apt-get install -y tesseract-ocr
+      pip install -r requirements.txt
     startCommand: python app.py
     envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
+      - key: PYTHON_VERSION
+        value: 3.10
