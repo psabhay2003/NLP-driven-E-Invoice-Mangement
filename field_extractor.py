@@ -9,7 +9,7 @@ def download_model():
     if not os.path.exists(model_file):
         os.makedirs(model_dir, exist_ok=True)
         print("Downloading model...")
-        url = "https://your-direct-link.com/model.safetensors"  # ← Replace this
+        url = "https://drive.usercontent.google.com/uc?id=1rsw2uyekg9_1sEBwpuyPmq0kWeAP6rjI&export=download"  # ← Replace this
         response = requests.get(url)
         with open(model_file, "wb") as f:
             f.write(response.content)
