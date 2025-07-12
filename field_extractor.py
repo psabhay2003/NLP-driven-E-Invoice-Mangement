@@ -1,37 +1,21 @@
-import os
-import requests
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-def download_model():
-    model_dir = "t5_invoice_model"
-    model_file = os.path.join(model_dir, "model.safetensors")
+# Load model and tokenizer from Hugging Face Hub
+MODEL_REPO = "psabhay2003/t5_invoice_model"  # Replace with your actual repo path
 
-    if not os.path.exists(model_file):
-        os.makedirs(model_dir, exist_ok=True)
-        print("Downloading model...")
-        url = "https://drive.usercontent.google.com/uc?id=1rsw2uyekg9_1sEBwpuyPmq0kWeAP6rjI&export=download"  # ← Replace this
-        response = requests.get(url)
-        with open(model_file, "wb") as f:
-            f.write(response.content)
-
-        # Do the same for other required files (config.json, tokenizer_config.json, etc.)
-        # You can repeat for each file
-        # Or zip them all and unzip here
-download_model()
-
-# Load model and tokenizer
-tokenizer = T5Tokenizer.from_pretrained("t5_invoice_model")
-model = T5ForConditionalGeneration.from_pretrained("t5_invoice_model")
-
-
-# Load model and tokenizer once
-tokenizer = T5Tokenizer.from_pretrained("./t5_invoice_model")  # Adjust path
-model = T5ForConditionalGeneration.from_pretrained("./t5_invoice_model")
+tokenizer = T5Tokenizer.from_pretrained(MODEL_REPO)
+model = T5ForConditionalGeneration.from_pretrained(MODEL_REPO)
 
 def extract_invoice_fields(raw_text: str) -> dict:
     """Extract structured invoice fields from raw OCR text"""
     input_text = f"Extract invoice fields: {raw_text}"
-    inputs = tokenizer(input_text, return_tensors="pt", truncation=True, padding="max_length", max_length=512)
+    inputs = tokenizer(
+        input_text,
+        return_tensors="pt",
+        truncation=True,
+        padding="max_length",
+        max_length=512
+    )
 
     output = model.generate(
         input_ids=inputs["input_ids"],
