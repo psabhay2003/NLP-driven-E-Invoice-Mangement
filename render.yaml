@@ -3,7 +3,8 @@ services:
     name: invoice-ocr-app
     env: python
     buildCommand: |
-      ./render-build.sh
+      apt-get update
+      apt-get install -y tesseract-ocr libtesseract-dev
       pip install -r requirements.txt
     startCommand: python app.py
     envVars:
