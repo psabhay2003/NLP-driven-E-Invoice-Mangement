@@ -2,7 +2,9 @@ services:
   - type: web
     name: invoice-ocr-app
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      ./render-build.sh
+      pip install -r requirements.txt
     startCommand: python app.py
     envVars:
       - key: PYTHON_VERSION
