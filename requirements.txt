@@ -1,7 +1,6 @@
-flask
-pytesseract
-transformers
-torch
-Pillow
-sentencepiece
-pytesseract
+Flask==3.0.2
+pytesseract==0.3.11
+transformers==4.42.2
+torch==2.3.0
+Pillow==10.3.0
+sentencepiece==0.1.99
