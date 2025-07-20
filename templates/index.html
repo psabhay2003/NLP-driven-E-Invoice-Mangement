@@ -1,32 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Invoice OCR</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .output-box { background: #f0f0f0; padding: 15px; margin-top: 15px; border-radius: 5px; }
-        .btn { padding: 10px 15px; margin-top: 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Invoice OCR App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f8fa;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .results {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+    }
+
+    .download-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .download-link a {
+      text-decoration: none;
+      color: white;
+      background-color: #28a745;
+      padding: 10px 20px;
+      border-radius: 6px;
+    }
+
+    .download-link a:hover {
+      background-color: #1e7e34;
+    }
+
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Upload Invoice Image</h2>
-        <form method="post" enctype="multipart/form-data">
-            <input type="file" name="image" required><br>
-            <button class="btn" type="submit">Extract</button>
-        </form>
-        {% if data %}
-        <div class="output-box">
-            <h3>Extracted Data:</h3>
-            <ul>
-                {% for key, value in data.items() %}
-                    <li><strong>{{ key }}:</strong> {{ value }}</li>
-                {% endfor %}
-            </ul>
-            <a class="btn" href="{{ download_link }}">Download CSV</a>
-        </div>
-        {% endif %}
+  <div class="container">
+    <h2>Invoice OCR Extractor</h2>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="image" accept="image/*" required>
+      <br>
+      <button type="submit">Upload & Extract</button>
+    </form>
+
+    {% if data %}
+    <div class="results">
+      <h3>Extracted Fields</h3>
+      <table>
+        <thead>
+          <tr>
+            {% for key in data.keys() %}
+              <th>{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {% for value in data.values() %}
+              <td>{{ value }}</td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
     </div>
+
+    <div class="download-link">
+      <a href="{{ download_link }}">Download CSV</a>
+    </div>
+    {% endif %}
+  </div>
 </body>
 </html>
