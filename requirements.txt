@@ -7,4 +7,5 @@ sentencepiece
 pytesseract
 Pillow
 pandas
+gunicorn
 numpy<2
