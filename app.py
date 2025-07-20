@@ -1,112 +1,45 @@
-
-from flask import Flask, request, render_template, flash, redirect, url_for, send_file
+from flask import Flask, render_template, request, send_file
+from werkzeug.utils import secure_filename
 import os
-import csv
-import uuid
+import pandas as pd
+from field_extractor import extract_fields
+from ocr_extract import extract_text
+from model_loader import load_model_and_tokenizer
 
 app = Flask(__name__)
-app.secret_key = "your-secret-key"
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+model, tokenizer = load_model_and_tokenizer()
 
-def extract_text_from_image(image_path):
-    from PIL import Image
-    import pytesseract
-
-    image = Image.open(image_path)
-    return pytesseract.image_to_string(image)
-
-
-def extract_invoice_fields(text):
-    from transformers import pipeline
-    # Use a lightweight model
-    model = pipeline("token-classification", model="distilbert-base-cased")
-    
-    # Mock extraction (replace with real entity parsing if needed)
-    return {
-        "Invoice No": "123456",
-        "Date": "2023-01-01",
-        "Total Amount": "$1000",
-        "Vendor": "Example Vendor"
-    }
-
-
-@app.route("/", methods=["GET", "POST"])
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    all_results = []
-    csv_filename = None
+    extracted_data = None
+    if request.method == 'POST':
+        if 'image' not in request.files:
+            return render_template('index.html', error='No file part')
+        file = request.files['image']
+        if file.filename == '':
+            return render_template('index.html', error='No selected file')
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
 
-    if request.method == "POST":
-        images = request.files.getlist("image")
-        if not images:
-            return "No files uploaded.", 400
+        text = extract_text(filepath)
+        extracted_data = extract_fields(text, model, tokenizer)
 
-        os.makedirs("uploads", exist_ok=True)
-        batch_id = uuid.uuid4().hex
-        csv_filename = f"invoices_{batch_id}.csv"
-        csv_path = os.path.join("uploads", csv_filename)
+        df = pd.DataFrame([extracted_data])
+        csv_path = os.path.join(UPLOAD_FOLDER, 'output.csv')
+        df.to_csv(csv_path, index=False)
 
-        with open(csv_path, "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
+        return render_template('index.html', data=extracted_data, download_link='/download')
 
-            for image in images:
-                image_path = os.path.join("uploads", image.filename)
-                image.save(image_path)
+    return render_template('index.html')
 
-                raw_text = extract_text_from_image(image_path)
-                result = extract_invoice_fields(raw_text)
+@app.route('/download')
+def download_csv():
+    path = os.path.join(UPLOAD_FOLDER, 'output.csv')
+    return send_file(path, as_attachment=True)
 
-                all_results.append({"filename": image.filename, "fields": result})
-
-                writer.writerow([
-                    image.filename,
-                    result.get("Invoice No", ""),
-                    result.get("Date", ""),
-                    result.get("Total Amount", ""),
-                    result.get("Vendor", "")
-                ])
-
-                os.remove(image_path)
-
-        return render_template("index.html", all_results=all_results, csv_filename=csv_filename)
-
-    return render_template("index.html")
-
-
-@app.route("/download/<filename>")
-def download_csv(filename):
-    filepath = os.path.join("uploads", filename)
-    if os.path.exists(filepath):
-        return send_file(filepath, as_attachment=True)
-    return "File not found.", 404
-
-
-@app.route("/append-to-existing", methods=["POST"])
-def append_to_existing_csv():
-    csv_filename = request.form.get("csv_filename")
-    new_csv_path = os.path.join("uploads", csv_filename)
-    existing_csv_path = os.path.join("uploads", "invoices.csv")
-
-    if not os.path.exists(new_csv_path):
-        flash("No generated CSV to append.")
-        return redirect(url_for("index"))
-
-    if not os.path.exists(existing_csv_path):
-        with open(existing_csv_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
-
-    with open(new_csv_path, 'r') as new_file, open(existing_csv_path, 'a', newline='') as existing_file:
-        reader = csv.reader(new_file)
-        writer = csv.writer(existing_file)
-        next(reader)
-        for row in reader:
-            writer.writerow(row)
-
-    flash("✅ Appended to invoices.csv successfully!")
-    return send_file(existing_csv_path, as_attachment=True)
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(debug=True)

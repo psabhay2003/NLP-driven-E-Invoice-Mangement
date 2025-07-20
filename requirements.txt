@@ -1,5 +1,8 @@
-flask==2.3.3
-pytesseract==0.3.13
-transformers==4.40.0
-Pillow==9.5.0
+Flask
+torch
+transformers
+pandas
 sentencepiece
+Pillow
+pytesseract
+gunicorn
