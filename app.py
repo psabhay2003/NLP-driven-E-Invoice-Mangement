@@ -10,36 +10,54 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-model, tokenizer = load_model_and_tokenizer()
+# Load model and tokenizer once
+try:
+    model, tokenizer = load_model_and_tokenizer()
+except Exception as e:
+    print("❌ Error loading model/tokenizer:", str(e))
+    model, tokenizer = None, None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     extracted_data = None
+
     if request.method == 'POST':
+        if model is None or tokenizer is None:
+            return render_template('index.html', error='Model not loaded.')
+
         if 'image' not in request.files:
             return render_template('index.html', error='No file part')
+
         file = request.files['image']
         if file.filename == '':
             return render_template('index.html', error='No selected file')
+
         filename = secure_filename(file.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        text = extract_text(filepath)
-        extracted_data = extract_fields(text, model, tokenizer)
+        try:
+            text = extract_text(filepath)
+            extracted_data = extract_fields(text, model, tokenizer)
 
-        df = pd.DataFrame([extracted_data])
-        csv_path = os.path.join(UPLOAD_FOLDER, 'output.csv')
-        df.to_csv(csv_path, index=False)
+            df = pd.DataFrame([extracted_data])
+            csv_path = os.path.join(UPLOAD_FOLDER, 'output.csv')
+            df.to_csv(csv_path, index=False)
 
-        return render_template('index.html', data=extracted_data, download_link='/download')
+            return render_template('index.html', data=extracted_data, download_link='/download')
+
+        except Exception as e:
+            return render_template('index.html', error=f'Processing failed: {str(e)}')
 
     return render_template('index.html')
 
 @app.route('/download')
 def download_csv():
     path = os.path.join(UPLOAD_FOLDER, 'output.csv')
-    return send_file(path, as_attachment=True)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
+    return "CSV not found", 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
