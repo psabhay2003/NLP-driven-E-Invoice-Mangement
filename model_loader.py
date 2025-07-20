@@ -1,7 +1,7 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 import torch
 
-HF_MODEL_NAME = "psabhay2003/t5_invoice_model/model.safetensors"
+HF_MODEL_NAME = "psabhay2003/t5_invoice_model"
 
 def load_model_and_tokenizer():
     print(f"📦 Loading model from Hugging Face: {HF_MODEL_NAME}")
