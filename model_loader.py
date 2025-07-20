@@ -8,7 +8,7 @@ MODEL_FILE = "model.safetensors"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILE)
 
 # Your Google Drive file ID
-FILE_ID = "1rsw2uyekg9_1sEBwpuyPmq0kWeAP6rjI"
+FILE_ID = "15jfduaYqSLjFshjKDcw5W6F0cBcfvB8L"
 
 def download_from_google_drive(file_id, dest_path):
     def get_confirm_token(response):
