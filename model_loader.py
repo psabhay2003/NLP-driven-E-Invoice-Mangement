@@ -1,18 +1,16 @@
 import os
 import requests
-from transformers import T5Tokenizer, T5ForConditionalGeneration, SafetensorsCheckpoint
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 import torch
 
-# Configuration
 MODEL_DIR = "model"
 MODEL_FILE = "model.safetensors"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILE)
 
-# Replace with your actual Google Drive file ID
+# Google Drive file ID for the safetensors model
 FILE_ID = "15jfduaYqSLjFshjKDcw5W6F0cBcfvB8L"
 
 def download_from_google_drive(file_id, dest_path):
-    """Download large files from Google Drive with token handling."""
     def get_confirm_token(response):
         for key, value in response.cookies.items():
             if key.startswith("download_warning"):
@@ -29,29 +27,24 @@ def download_from_google_drive(file_id, dest_path):
         params = {'id': file_id, 'confirm': token}
         response = session.get(URL, params=params, stream=True)
 
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     with open(dest_path, "wb") as f:
         for chunk in response.iter_content(32768):
             if chunk:
                 f.write(chunk)
 
-    print(f"[INFO] Downloaded model file to: {dest_path}")
+    print(f"✅ Downloaded model to {dest_path}")
 
 def load_model_and_tokenizer():
-    """Load model and tokenizer, downloading the model if missing."""
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR)
+
     if not os.path.exists(MODEL_PATH):
-        print("[INFO] Model file not found locally. Downloading...")
+        print("📦 Model not found locally. Downloading from Google Drive...")
         download_from_google_drive(FILE_ID, MODEL_PATH)
 
-    print("[INFO] Loading tokenizer...")
+    # Load the model and tokenizer from the directory
+    model = T5ForConditionalGeneration.from_pretrained(MODEL_DIR)
     tokenizer = T5Tokenizer.from_pretrained(MODEL_DIR)
 
-    print("[INFO] Loading model from safetensors...")
-    model = T5ForConditionalGeneration.from_pretrained(
-        MODEL_DIR,
-        torch_dtype=torch.float32,
-        low_cpu_mem_usage=True,
-        use_safetensors=True
-    )
-
+    print("🚀 Model and tokenizer loaded successfully.")
     return model, tokenizer
