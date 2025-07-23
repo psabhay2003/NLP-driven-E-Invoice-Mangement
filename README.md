@@ -9,5 +9,5 @@ The project aims to automate the entire ETL pipeline such that whenever a user u
 + The python library used for OCR is [Pytesseract](https://pypi.org/project/pytesseract/).
 ### Text-to-Text Transfer Transformer (Phase 2):
 - The "invoice_text.csv" file was obtained as an output from Phase 1.
-* A "t5-base" model was fine-tuned as per the use case to organize the unstructured OCR text from "invoice_text.csv" into a structured manner using the labelled data sample.
+* A "t5-base" model was fine-tuned as per the use case to organize the unstructured OCR text from "invoice_text.csv" into a structured manner using the "labelled data sample.csv".
 + The output from fine-tuning the "t5-base" model was parsed using regular expressions (re) to cover different labels (such as Invoice No., Date, Total Amount, and Vendor).
