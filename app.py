@@ -2,17 +2,24 @@ from flask import Flask, request, render_template, flash, redirect, url_for, sen
 import os
 import csv
 import uuid
-from ocr_extract import extract_text_from_image
-from field_extractor import extract_invoice_fields
+import threading
+import time
+from werkzeug.utils import secure_filename
+from ocr_extract import extract_text_from_image     # Your OCR logic
+from field_extractor import extract_invoice_fields  # Your model logic
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key")
 
-# Limit file upload size (e.g. 10 MB)
-app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
-
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def delayed_delete(path, delay=300):
+    def delete():
+        time.sleep(delay)
+        if os.path.exists(path):
+            os.remove(path)
+    threading.Thread(target=delete, daemon=True).start()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -21,8 +28,8 @@ def index():
 
     if request.method == "POST":
         images = request.files.getlist("image")
-        if not images or not any(img.filename for img in images):
-            flash("❌ No files uploaded.", "error")
+        if not images:
+            flash("No files uploaded.", "error")
             return redirect(url_for("index"))
 
         batch_id = uuid.uuid4().hex
@@ -34,27 +41,31 @@ def index():
             writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
 
             for image in images:
-                if image and image.filename:
-                    image_path = os.path.join(UPLOAD_FOLDER, image.filename)
-                    image.save(image_path)
+                filename = secure_filename(image.filename)
+                if not filename:
+                    continue
 
-                    try:
-                        raw_text = extract_text_from_image(image_path)
-                        result = extract_invoice_fields(raw_text)
-                    except Exception as e:
-                        result = {"error": str(e)}
+                image_path = os.path.join(UPLOAD_FOLDER, filename)
+                image.save(image_path)
 
-                    all_results.append({"filename": image.filename, "fields": result})
+                try:
+                    raw_text = extract_text_from_image(image_path)
+                    result = extract_invoice_fields(raw_text)
+
+                    all_results.append({"filename": filename, "fields": result})
 
                     writer.writerow([
-                        image.filename,
+                        filename,
                         result.get("Invoice No", ""),
                         result.get("Date", ""),
                         result.get("Total Amount", ""),
                         result.get("Vendor", "")
                     ])
-
-                    os.remove(image_path)
+                except Exception as e:
+                    flash(f"❌ Error processing {filename}: {str(e)}", "error")
+                finally:
+                    # Schedule image deletion after 5 minutes
+                    delayed_delete(image_path)
 
         return render_template("index.html", all_results=all_results, csv_filename=csv_filename)
 
@@ -79,15 +90,17 @@ def append_to_existing_csv():
         flash("❌ No generated CSV to append.", "error")
         return redirect(url_for("index"))
 
+    # Create base CSV file if not exists
     if not os.path.exists(existing_csv_path):
         with open(existing_csv_path, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
 
+    # Append content
     with open(new_csv_path, 'r') as new_file, open(existing_csv_path, 'a', newline='') as existing_file:
         reader = csv.reader(new_file)
         writer = csv.writer(existing_file)
-        next(reader)  # skip header
+        next(reader)  # Skip header
         for row in reader:
             writer.writerow(row)
 
