@@ -31,23 +31,27 @@ def index():
             writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
 
             for image in images:
-                image_path = os.path.join(UPLOAD_FOLDER, image.filename)
+                # Ensure unique filename in uploads folder
+                unique_filename = f"{uuid.uuid4().hex}_{image.filename}"
+                image_path = os.path.join(UPLOAD_FOLDER, unique_filename)
                 image.save(image_path)
 
                 raw_text = extract_text_from_image(image_path)
                 result = extract_invoice_fields(raw_text)
 
-                all_results.append({"filename": image.filename, "fields": result})
+                all_results.append({"filename": unique_filename, "fields": result})
 
                 writer.writerow([
-                    image.filename,
+                    unique_filename,
                     result.get("Invoice No", ""),
                     result.get("Date", ""),
                     result.get("Total Amount", ""),
                     result.get("Vendor", "")
                 ])
 
-                os.remove(image_path)
+                # Safely delete the uploaded file
+                if os.path.exists(image_path):
+                    os.remove(image_path)
 
         return render_template("index.html", all_results=all_results, csv_filename=csv_filename)
 
@@ -72,13 +76,13 @@ def append_to_existing_csv():
         flash("❌ No generated CSV to append.", "error")
         return redirect(url_for("index"))
 
-    # Create base CSV file if not exists
+    # Create base CSV if missing
     if not os.path.exists(existing_csv_path):
         with open(existing_csv_path, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["filename", "Invoice No", "Date", "Total Amount", "Vendor"])
 
-    # Append content
+    # Append new data
     with open(new_csv_path, 'r') as new_file, open(existing_csv_path, 'a', newline='') as existing_file:
         reader = csv.reader(new_file)
         writer = csv.writer(existing_file)
