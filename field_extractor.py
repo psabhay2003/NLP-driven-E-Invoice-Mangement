@@ -1,35 +1,25 @@
-import os
 from transformers import T5Tokenizer, T5ForConditionalGeneration, AutoConfig
 from huggingface_hub import snapshot_download
+import os
 
 HF_MODEL_ID = "psabhay2003/t5_invoice_model"
 LOCAL_MODEL_DIR = "./t5_invoice_model"
 
-def ensure_model_downloaded():
-    """Ensure the fine-tuned model is downloaded locally."""
-    if not os.path.exists(os.path.join(LOCAL_MODEL_DIR, "model.safetensors")):
-        print("🔄 Downloading model from Hugging Face Hub...")
-        snapshot_download(
-            repo_id=HF_MODEL_ID,
-            local_dir=LOCAL_MODEL_DIR,
-            local_dir_use_symlinks=False
-        )
-    else:
-        print("✅ Model already available locally.")
+if not os.path.exists(LOCAL_MODEL_DIR) or not os.path.exists(os.path.join(LOCAL_MODEL_DIR, "pytorch_model.bin")):
+    snapshot_download(HF_MODEL_ID, local_dir=LOCAL_MODEL_DIR, local_dir_use_symlinks=False)
 
-# Prepare model
-ensure_model_downloaded()
+# Use the correct model base
+model_name = "t5-small"
 
-# Load tokenizer and model config
-tokenizer = T5Tokenizer.from_pretrained(LOCAL_MODEL_DIR)
-config = AutoConfig.from_pretrained(LOCAL_MODEL_DIR)
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+config = AutoConfig.from_pretrained(model_name)
 
-# Load model (quantized with safetensors)
 model = T5ForConditionalGeneration.from_pretrained(
     pretrained_model_name_or_path=LOCAL_MODEL_DIR,
     config=config,
     local_files_only=True
 )
+
 
 def extract_invoice_fields(raw_text: str) -> dict:
     """Extract structured invoice fields from raw OCR text using T5 model"""
