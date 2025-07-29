@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.Python
+.env
+.venv/
+uploads/
+*.log
+*.csv
+.DS_Store
