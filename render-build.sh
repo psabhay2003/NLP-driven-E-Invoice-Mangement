@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
-# Install Tesseract OCR for lightweight OCR
-apt-get update && apt-get install -y tesseract-ocr
+echo "🔧 Updating system packages..."
+apt-get update -y
+
+echo "📦 Installing Tesseract OCR..."
+apt-get install -y tesseract-ocr
+
+echo "✅ Tesseract OCR installation complete!"
