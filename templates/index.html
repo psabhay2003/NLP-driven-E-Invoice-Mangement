@@ -77,6 +77,13 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(form);
+            const fileInput = form.querySelector('input[name="image"]');
+
+            if (!fileInput.files.length) {
+                alert("Please upload at least one image.");
+                return;
+            }
+
             progressContainer.classList.remove('d-none');
             progressBar.style.width = '0%';
             progressBar.textContent = 'Uploading...';
@@ -101,6 +108,11 @@
                     progressBar.classList.add('bg-danger');
                     progressBar.textContent = 'Upload Failed';
                 }
+            };
+
+            xhr.onerror = function() {
+                progressBar.classList.add('bg-danger');
+                progressBar.textContent = 'Upload Error';
             };
 
             xhr.send(formData);
