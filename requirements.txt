@@ -1,9 +1,0 @@
-flask
-pytesseract
-transformers
-torch
-Pillow
-sentencepiece 
-easyocr
-opencv-python-headless  
-safetensors
