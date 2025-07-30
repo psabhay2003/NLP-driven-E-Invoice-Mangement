@@ -15,7 +15,7 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-def delayed_delete(path, delay=300):
+def delayed_delete(path, delay=1200):
     def delete():
         time.sleep(delay)
         if os.path.exists(path):
