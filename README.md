@@ -13,5 +13,6 @@ The project reduces manual data entry by 95%, considering it took me 60 minutes 
 * A "t5-base" model was fine-tuned as per the use case to organize the unstructured OCR text from "invoice_text.csv" into a structured manner using the "labelled data sample.csv".
 + The output from fine-tuning the "t5-base" model was parsed using regular expressions (re) to cover different labels (such as Invoice No., Date, Total Amount, and Vendor).
 ### Model Deployment (Phase 3):
-- The model was deployed to the cloud using a platform named [Railway](https://railway.com/).
+-In the deployment phase, the model was deployed to the cloud using a platform named [Railway](https://railway.com/).
++ The app.py file stores the Flask API code, which calls the application package and the required dependencies stored in a virtual machine as a standardized unit called a container. Dockerization is the process of packaging these application files and the requirements.txt into a container for cloud-based hosting. 
 * The link to the website is: [NLP-driven E-Invoice Management](https://nlp-driven-e-invoice-mangement-production-6f45.up.railway.app/)
